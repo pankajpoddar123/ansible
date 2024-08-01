@@ -1,0 +1,52 @@
+[ansible@ansible playbook]$ cat http.yml
+---
+- name: Install and start apache HTTPD
+  hosts: web
+  tasks:
+    - name: | ### newline characters within the string are to be preserved
+        Ensure httpd package is present  
+        Index.html is copied
+        Service is started
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+
+    - name: >  ## indicate that newline characters are to be converted to spaces.
+        Correct index.html is present
+        and service is started
+      ansible.builtin.copy:
+        src: /home/ansible/playbook/index.html
+        dest: /var/www/html/index.html
+
+    - name: Ensure HTTPD is started
+      ansible.builtin.service:
+        name: httpd
+        state: started
+
+
+  [ansible@ansible playbook]$ ansible-playbook http.yml
+
+PLAY [Install and start apache HTTPD] ***********************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Ensure httpd package is present
+Index.html is copied
+Service is started] ********************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Correct index.html is present and service is started] *************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Ensure HTTPD is started] ******************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
