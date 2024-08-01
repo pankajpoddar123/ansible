@@ -1,0 +1,97 @@
+[ansible@ansible playbook]$ cat playbook3.yml
+---
+- name: Deploy and start Apache HTTPD service
+  hosts: web
+  vars:
+    web_pkg: httpd
+    firewall_pkg: firewalld
+    web_service: httpd
+    firewall_service: firewalld
+    python_pkg: python3-PyMySQL
+    rule: http
+  tasks:
+    - name: Installing all the packages
+      ansible.builtin.dnf:
+        name:
+          - "{{ web_pkg }}"
+          - "{{ firewall_pkg }}"
+          - "{{ python_pkg }}"
+        state: latest
+
+    - name: Starting and enablling {{ firewall_service }}
+      ansible.builtin.service:
+        name: "{{ firewall_service }}"
+        state: started
+        enabled: true
+
+    - name: The {{ web_service }} started and enabled
+      ansible.builtin.service:
+        name: "{{ web_service }}"
+        state: started
+        enabled: true
+
+    - name: Web content in place
+      ansible.builtin.copy:
+        content: "Example web content"
+        dest: /var/www/html/index.html
+
+    - name: The firewall port for {{ rule }} is open
+      ansible.posix.firewalld:
+        service: "{{ rule }}"
+        permanent: true
+        immediate: true
+        state: enabled
+
+- name: Verify apache service
+  hosts: localhost
+  become: false
+  tasks:
+    - name: Web server connectivity
+      ansible.builtin.uri:
+        url: http://node1
+        status_code: 200
+
+[ansible@ansible playbook]$ ansible-playbook playbook3.yml --syntax-check
+
+playbook: playbook3.yml
+[ansible@ansible playbook]$ ansible-playbook  playbook3.yml
+
+PLAY [Deploy and start Apache HTTPD service] **************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Installing all the packages] ************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Starting and enablling firewalld] *******************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [The httpd started and enabled] **********************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Web content in place] *******************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [The firewall port for http is open] *****************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+PLAY [Verify apache service] ******************************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Web server connectivity] ****************************************************************************************************************************
+ok: [localhost]
+
+PLAY RECAP ************************************************************************************************************************************************
+localhost                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node1                      : ok=6    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=6    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
