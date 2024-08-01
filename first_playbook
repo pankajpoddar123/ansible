@@ -1,0 +1,68 @@
+## First Playbook
+## Modules used dnf, copy, service 
+
+[ansible@ansible playbook]$ cat http.yml
+---
+- name: Install and start apache HTTPD
+  hosts: web
+  tasks:
+    - name: Ensure httpd package is present
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+
+    - name: Correct index.html is present
+      ansible.builtin.copy:
+        src: /home/ansible/playbook/index.html
+        dest: /var/www/html/index.html
+
+    - name: Ensure HTTPD is started
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+[ansible@ansible playbook]$ cat inventory
+[web]
+node1
+node2
+
+[ansible@ansible playbook]$ cat ansible.cfg
+[defaults]
+inventory = ./inventory
+remote_user = ansible
+ask_pass = false
+
+[privilege_escalation]
+become = true
+become_method = sudo
+become_user = root
+become_ask_pass = false
+
+[ansible@ansible playbook]$ ansible-playbook http.yml
+
+PLAY [Install and start apache HTTPD] ***********************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Ensure httpd package is present] **********************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Correct index.html is present] ************************************************************************************************************************
+changed: [node1]
+changed: [node2]
+
+TASK [Ensure HTTPD is started] ******************************************************************************************************************************
+changed: [node1]
+changed: [node2]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=4    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=4    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+
+
