@@ -44,3 +44,31 @@ PLAY RECAP *********************************************************************
 node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 
+## We can turn off gather_facts for the play and if needed we can turn for a specific plays like below
+
+[ansible@ansible playbook]$ cat playbook7.yml
+---
+- name: This play dont gather ansible facts
+  hosts: web
+  gather_facts: no
+  tasks:
+    - name: Manually gather facts
+      ansible.builtin.setup:
+[ansible@ansible playbook]$ ansible-playbook playbook7.yml
+
+PLAY [This play dont gather ansible facts] ******************************************************************************************************************
+
+TASK [Manually gather facts] ********************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
+
+
+
+
+
