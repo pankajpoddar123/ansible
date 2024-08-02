@@ -9,3 +9,38 @@
 
 
 Since the output is huge so not displaying here. 
+
+
+[ansible@ansible playbook]$ cat playbook6.yml
+---
+- name: Displaying few details from ansible facts
+  hosts: all
+  tasks:
+    - name: Print some ansible facts
+      ansible.builtin.debug:
+        msg: >
+          Hostname:  {{ ansible_facts['hostname'] }}
+          IPV4 address: {{ ansible_facts['default_ipv4']['address'] }}
+          Kernel: {{ ansible_facts['kernel'] }}
+[ansible@ansible playbook]$
+
+[ansible@ansible playbook]$ ansible-playbook playbook6.yml
+
+PLAY [Displaying few details from ansible facts] ************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Print some ansible facts] *****************************************************************************************************************************
+ok: [node1] => {
+    "msg": "Hostname:  node1 IPV4 address: 172.31.21.144 Kernel: 5.14.0-427.20.1.el9_4.x86_64\n"
+}
+ok: [node2] => {
+    "msg": "Hostname:  node2 IPV4 address: 172.31.21.171 Kernel: 5.14.0-427.20.1.el9_4.x86_64\n"
+}
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
