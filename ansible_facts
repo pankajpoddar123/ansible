@@ -1,0 +1,11 @@
+[ansible@ansible playbook]$ cat playbook5.yml
+---
+- name: Fact Dump
+  hosts: all
+  tasks:
+    - name: Print all facts
+      ansible.builtin.debug:
+        var: ansible_facts
+
+
+Since the output is huge so not displaying here. 
