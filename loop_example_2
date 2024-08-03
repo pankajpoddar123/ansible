@@ -1,3 +1,4 @@
+## Loop example with a variable containing list of values
 
 [ansible@ansible playbook]$ cat playbook10.yml
 ---
