@@ -1,0 +1,239 @@
+## Using Register Variables with Loops
+
+[ansible@ansible playbook]$ cat playbook12.yml
+---
+- name: Loop Register Test
+  gather_facts: no
+  hosts: web
+  tasks:
+    - name: Looping echo Task
+      ansible.builtin.shell: "echo This is my item: {{ item }} "
+      loop:
+        - one
+        - two
+      register: echo_results
+
+    - name: Show echo_results variable
+      ansible.builtin.debug:
+        var: echo_results
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook12.yml
+
+PLAY [Loop Register Test] ***********************************************************************************************************************
+
+TASK [Looping echo Task] ************************************************************************************************************************
+changed: [node1] => (item=one)
+changed: [node2] => (item=one)
+changed: [node2] => (item=two)
+changed: [node1] => (item=two)
+
+TASK [Show echo_results variable] ***************************************************************************************************************
+ok: [node1] => {
+    "echo_results": { # the result is a dictionary 
+        "changed": true,
+        "msg": "All items completed",
+        "results": [   ## The results key contains the results from the previous task. Its a list 
+            { ## The start of task metadata for the first item (indicated by the item key).
+                "ansible_facts": {
+                    "discovered_interpreter_python": "/usr/bin/python3"
+                },
+                "ansible_loop_var": "item",
+                "changed": true,
+                "cmd": "echo This is my item: one ",
+                "delta": "0:00:00.004139",
+                "end": "2024-08-03 07:29:10.385771",
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "_raw_params": "echo This is my item: one ",
+                        "_uses_shell": true,
+                        "argv": null,
+                        "chdir": null,
+                        "creates": null,
+                        "executable": null,
+                        "removes": null,
+                        "stdin": null,
+                        "stdin_add_newline": true,
+                        "strip_empty_ends": true
+                    }
+                },
+                "item": "one",
+                "msg": "",
+                "rc": 0,
+                "start": "2024-08-03 07:29:10.381632",
+                "stderr": "",
+                "stderr_lines": [],
+                "stdout": "This is my item: one",  ## Output of the tasks 
+                "stdout_lines": [
+                    "This is my item: one"
+                ]
+            },
+            {  ## The start of task result metadata for the second item
+                "ansible_loop_var": "item",
+                "changed": true,
+                "cmd": "echo This is my item: two ",
+                "delta": "0:00:00.003998",
+                "end": "2024-08-03 07:29:10.913489",
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "_raw_params": "echo This is my item: two ",
+                        "_uses_shell": true,
+                        "argv": null,
+                        "chdir": null,
+                        "creates": null,
+                        "executable": null,
+                        "removes": null,
+                        "stdin": null,
+                        "stdin_add_newline": true,
+                        "strip_empty_ends": true
+                    }
+                },
+                "item": "two",
+                "msg": "",
+                "rc": 0,
+                "start": "2024-08-03 07:29:10.909491",
+                "stderr": "",
+                "stderr_lines": [],
+                "stdout": "This is my item: two",
+                "stdout_lines": [
+                    "This is my item: two"
+                ]## The ] character indicates the end of the results list.
+            }
+        ],
+        "skipped": false
+    }
+}
+ok: [node2] => {
+    "echo_results": {
+        "changed": true,
+        "msg": "All items completed",
+        "results": [
+            {
+                "ansible_facts": {
+                    "discovered_interpreter_python": "/usr/bin/python3"
+                },
+                "ansible_loop_var": "item",
+                "changed": true,
+                "cmd": "echo This is my item: one ",
+                "delta": "0:00:00.003832",
+                "end": "2024-08-03 07:29:10.387131",
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "_raw_params": "echo This is my item: one ",
+                        "_uses_shell": true,
+                        "argv": null,
+                        "chdir": null,
+                        "creates": null,
+                        "executable": null,
+                        "removes": null,
+                        "stdin": null,
+                        "stdin_add_newline": true,
+                        "strip_empty_ends": true
+                    }
+                },
+                "item": "one",
+                "msg": "",
+                "rc": 0,
+                "start": "2024-08-03 07:29:10.383299",
+                "stderr": "",
+                "stderr_lines": [],
+                "stdout": "This is my item: one",
+                "stdout_lines": [
+                    "This is my item: one"
+                ]
+            },
+            {
+                "ansible_loop_var": "item",
+                "changed": true,
+                "cmd": "echo This is my item: two ",
+                "delta": "0:00:00.003817",
+                "end": "2024-08-03 07:29:10.909293",
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "_raw_params": "echo This is my item: two ",
+                        "_uses_shell": true,
+                        "argv": null,
+                        "chdir": null,
+                        "creates": null,
+                        "executable": null,
+                        "removes": null,
+                        "stdin": null,
+                        "stdin_add_newline": true,
+                        "strip_empty_ends": true
+                    }
+                },
+                "item": "two",
+                "msg": "",
+                "rc": 0,
+                "start": "2024-08-03 07:29:10.905476",
+                "stderr": "",
+                "stderr_lines": [],
+                "stdout": "This is my item: two",
+                "stdout_lines": [
+                    "This is my item: two"
+                ]
+            }
+        ],
+        "skipped": false
+    }
+}
+
+
+In the preceding example, the results key contains a list. 
+In the next example, the playbook is modified so that the second task iterates over this list:
+
+[ansible@ansible playbook]$ cat playbook13.yml
+---
+- name: Loop Register Test
+  gather_facts: no
+  hosts: web
+  tasks:
+    - name: Looping echo Task
+      ansible.builtin.shell: "echo This is my item: {{ item }} "
+      loop:
+        - one
+        - two
+      register: echo_results
+
+    - name: Show echo_results variable
+      ansible.builtin.debug:
+        msg: "STDOUT from previous tasks {{ item['stdout'] }} "
+      loop: "{{ echo_results['results'] }}"
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook13.yml
+
+PLAY [Loop Register Test] ***********************************************************************************************************************
+
+TASK [Looping echo Task] ************************************************************************************************************************
+changed: [node2] => (item=one)
+changed: [node1] => (item=one)
+changed: [node2] => (item=two)
+changed: [node1] => (item=two)
+
+TASK [Show echo_results variable] ***************************************************************************************************************
+ok: [node1] => (item={'changed': True, 'stdout': 'This is my item: one', 'stderr': '', 'rc': 0, 'cmd': 'echo This is my item: one ', 'start': '2024-08-03 07:43:19.947578', 'end': '2024-08-03 07:43:19.951513', 'delta': '0:00:00.003935', 'msg': '', 'invocation': {'module_args': {'_raw_params': 'echo This is my item: one ', '_uses_shell': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['This is my item: one'], 'stderr_lines': [], 'ansible_facts': {'discovered_interpreter_python': '/usr/bin/python3'}, 'failed': False, 'item': 'one', 'ansible_loop_var': 'item'}) => {
+    "msg": "STDOUT from previous tasks This is my item: one "
+}
+ok: [node1] => (item={'changed': True, 'stdout': 'This is my item: two', 'stderr': '', 'rc': 0, 'cmd': 'echo This is my item: two ', 'start': '2024-08-03 07:43:20.463800', 'end': '2024-08-03 07:43:20.467945', 'delta': '0:00:00.004145', 'msg': '', 'invocation': {'module_args': {'_raw_params': 'echo This is my item: two ', '_uses_shell': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['This is my item: two'], 'stderr_lines': [], 'failed': False, 'item': 'two', 'ansible_loop_var': 'item'}) => {
+    "msg": "STDOUT from previous tasks This is my item: two "
+}
+ok: [node2] => (item={'changed': True, 'stdout': 'This is my item: one', 'stderr': '', 'rc': 0, 'cmd': 'echo This is my item: one ', 'start': '2024-08-03 07:43:19.945913', 'end': '2024-08-03 07:43:19.949959', 'delta': '0:00:00.004046', 'msg': '', 'invocation': {'module_args': {'_raw_params': 'echo This is my item: one ', '_uses_shell': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['This is my item: one'], 'stderr_lines': [], 'ansible_facts': {'discovered_interpreter_python': '/usr/bin/python3'}, 'failed': False, 'item': 'one', 'ansible_loop_var': 'item'}) => {
+    "msg": "STDOUT from previous tasks This is my item: one "
+}
+ok: [node2] => (item={'changed': True, 'stdout': 'This is my item: two', 'stderr': '', 'rc': 0, 'cmd': 'echo This is my item: two ', 'start': '2024-08-03 07:43:20.463191', 'end': '2024-08-03 07:43:20.467079', 'delta': '0:00:00.003888', 'msg': '', 'invocation': {'module_args': {'_raw_params': 'echo This is my item: two ', '_uses_shell': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['This is my item: two'], 'stderr_lines': [], 'failed': False, 'item': 'two', 'ansible_loop_var': 'item'}) => {
+    "msg": "STDOUT from previous tasks This is my item: two "
+}
+
+PLAY RECAP **************************************************************************************************************************************
+node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
+
+
+
