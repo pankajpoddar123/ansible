@@ -1,0 +1,66 @@
+The when statement is used to run a task conditionally. It takes as a value the condition to test. If
+the condition is met, the task runs. If the condition is not met, the task is skipped.
+
+In Ansible content, you can express those values in other ways: True, yes, or 1
+are also accepted for true; and False, no, or 0 are also accepted for false.
+You might see true and yes, or false and no used interchangeably to express
+Boolean values in existing Ansible content.
+
+When using true/false conditions such as in the preceding example, you must be
+very careful to make sure that your variable is treated by Ansible as a Boolean and
+not a string. So we should avoid "" if using the boolean true or false. 
+
+
+[ansible@ansible playbook]$ cat playbook14.yml
+---
+- name: Simple boolean Task Demo
+  hosts: web
+  vars:
+    run_my_task: true  ## NOTE its note in "" 
+
+  tasks:
+    - name: httpd package is installed
+      ansible.builtin.dnf:
+        name: httpd
+      register: http_status
+      when: run_my_task
+    - name: HTTP output
+      ansible.builtin.debug:
+        var: http_status['msg']
+
+[ansible@ansible playbook]$ ansible-playbook playbook14.yml
+
+PLAY [Simple boolean Task Demo] *****************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [httpd package is installed] ***************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [HTTP output] ******************************************************************************************************************************
+ok: [node1] => {
+    "http_status": {
+        "changed": false,
+        "failed": false,
+        "msg": "Nothing to do",
+        "rc": 0,
+        "results": []
+    }
+}
+ok: [node2] => {
+    "http_status": {
+        "changed": false,
+        "failed": false,
+        "msg": "Nothing to do",
+        "rc": 0,
+        "results": []
+    }
+}
+
+PLAY RECAP **************************************************************************************************************************************
+node1                      : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
