@@ -1,0 +1,45 @@
+This example tests whether the my_service variable has a value. 
+If it does, the value of my_service is used as the name of the package to install. 
+If the my_service variable is not defined, then the task is skipped without an error.
+
+[ansible@ansible playbook]$ cat playbook15.yml
+---
+- name: Test variable is defined demo
+  hosts: web
+  vars:
+    my_service: httpd
+  tasks:
+    - name: "{{ my_service }} is installed to the latest "
+      ansible.builtin.dnf:
+        name: "{{ my_service }}"
+      register: status
+      when: my_service is defined
+    - name: Output of the tasks
+      ansible.builtin.debug:
+        var: status['msg']
+
+[ansible@ansible playbook]$ ansible-playbook playbook15.yml
+
+PLAY [Test variable is defined demo] ************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [httpd is installed to the latest] *********************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Output of the tasks] **********************************************************************************************************************
+ok: [node1] => {
+    "status['msg']": "Nothing to do"
+}
+ok: [node2] => {
+    "status['msg']": "Nothing to do"
+}
+
+PLAY RECAP **************************************************************************************************************************************
+node1                      : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
