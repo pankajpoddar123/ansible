@@ -1,0 +1,41 @@
+[ansible@ansible playbook]$ ansible-playbook playbook11.yml --syntax-check
+
+playbook: playbook11.yml
+[ansible@ansible playbook]$ cat playbook11.yml
+---
+- name: User exist and in correct group
+  hosts: web
+  vars:
+    users:
+    - name: jane
+      groups: wheel
+    - name: joe
+      groups: wheel
+  tasks:
+    - name: Users exist and in correct group
+      user:
+        name: "{{ item['name'] }}"
+        state: present
+        groups: "{{ item['groups'] }}"
+      loop: "{{ users }}"
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook11.yml
+
+PLAY [User exist and in correct group] **********************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Users exist and in correct group] *********************************************************************************************************************
+changed: [node2] => (item={'name': 'jane', 'groups': 'wheel'})
+changed: [node1] => (item={'name': 'jane', 'groups': 'wheel'})
+changed: [node2] => (item={'name': 'joe', 'groups': 'wheel'})
+changed: [node1] => (item={'name': 'joe', 'groups': 'wheel'})
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
