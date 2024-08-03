@@ -1,0 +1,36 @@
+## Looping over a simple list 
+
+[ansible@ansible playbook]$ cat playbook9.yml
+---
+- name: HTTPD and FIREWALLD are running
+  hosts: web
+  tasks:
+    - name: Ensuring HTTPD and Firewall Service running and enabled
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - httpd
+        - firewalld
+[ansible@ansible playbook]$ ansible-playbook playbook9.yml
+
+PLAY [HTTPD and FIREWALLD are running] **********************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Ensuring HTTPD and Firewall Service running and enabled] **********************************************************************************************
+ok: [node2] => (item=httpd)
+ok: [node1] => (item=httpd)
+ok: [node2] => (item=firewalld)
+ok: [node1] => (item=firewalld)
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
+
+
