@@ -16,7 +16,7 @@ not a string. So we should avoid "" if using the boolean true or false.
 - name: Simple boolean Task Demo
   hosts: web
   vars:
-    run_my_task: true  ## NOTE its note in "" 
+    run_my_task: true  ## NOTE its not in "" then it would consider a string instead of boolean
 
   tasks:
     - name: httpd package is installed
