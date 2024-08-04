@@ -1,0 +1,34 @@
+The when keyword also supports using a list to describe a list of conditions. When a list is
+provided to the when keyword, all the conditionals are combined using the and operation
+
+[ansible@ansible playbook]$ cat playbook19.yml
+---
+- name: Demostrate the in keyword
+  hosts: web
+  gather_facts: yes
+  tasks:
+    - name: Install HTTPD using dnf where supported
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+      when:
+        - ansible_facts['distribution'] == "RedHat"
+        - ansible_facts['distribution_major_version'] == "9"
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook19.yml
+
+PLAY [Demostrate the in keyword] **************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Install HTTPD using dnf where supported] ************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+PLAY RECAP ************************************************************************************************************************************
+node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
