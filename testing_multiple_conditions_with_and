@@ -1,0 +1,29 @@
+[ansible@ansible playbook]$ cat playbook18.yml
+---
+- name: Demostrate the in keyword
+  hosts: web
+  gather_facts: yes
+  tasks:
+    - name: Install HTTPD using dnf where supported
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+      when: ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "9"
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook18.yml
+
+PLAY [Demostrate the in keyword] **************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Install HTTPD using dnf where supported] ************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+PLAY RECAP ************************************************************************************************************************************
+node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
