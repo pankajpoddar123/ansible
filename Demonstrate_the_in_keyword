@@ -1,0 +1,44 @@
+
+In the example, the ansible_facts['distribution'] variable is a fact determined
+during the Gathering Facts task, and identifies the managed host’s operating system
+distribution. The supported_distros variable was created by the playbook author, and
+contains a list of operating system distributions that the playbook supports. If the value of
+ansible_facts['distribution'] is in the supported_distros list, the conditional passes
+and the task runs.
+
+
+
+[ansible@ansible playbook]$ cat playbook16.yml
+---
+- name: Demostrate the in keyword
+  hosts: web
+  gather_facts: yes
+  vars:
+    supported_distros:
+      - RedHat
+      - Fedora
+  tasks:
+    - name: Install HTTPD using dnf where supported
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+      when: ansible_facts['distribution'] in supported_distros   ## 
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook16.yml
+
+PLAY [Demostrate the in keyword] ****************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Install HTTPD using dnf where supported] **************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+PLAY RECAP **************************************************************************************************************************************
+node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
