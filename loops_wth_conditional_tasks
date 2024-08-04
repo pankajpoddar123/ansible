@@ -1,0 +1,103 @@
+This is how we get an output from ansible facts for mounts.
+If we observe mount is a list of dictionary. 
+
+"mounts": [  ## List 
+            {  ## Dictionary 
+                "block_available": 1889071,
+                "block_size": 4096,
+                "block_total": 2291195,
+                "block_used": 402124,
+                "device": "/dev/xvda4",
+                "fstype": "xfs",
+                "inode_available": 4576283,
+                "inode_total": 4615104,
+                "inode_used": 38821,
+                "mount": "/",
+                "options": "rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota",
+                "size_available": 7737634816,
+                "size_total": 9384734720,
+                "uuid": "d0be04e8-fc37-4928-af70-fc3d6595ef71"
+            },
+            {
+                "block_available": 202895,
+                "block_size": 4096,
+                "block_total": 245760,
+                "block_used": 42865,
+                "device": "/dev/xvda3",
+                "fstype": "xfs",
+                "inode_available": 523981,
+                "inode_total": 524288,
+                "inode_used": 307,
+                "mount": "/boot",
+                "options": "rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota",
+                "size_available": 831057920,
+                "size_total": 1006632960,
+                "uuid": "a2e9d044-9192-497f-a8c6-27aa7940de18"
+            },
+            {
+                "block_available": 49346,
+                "block_size": 4096,
+                "block_total": 51145,
+                "block_used": 1799,
+                "device": "/dev/xvda2",
+                "fstype": "vfat",
+                "inode_available": 0,
+                "inode_total": 0,
+                "inode_used": 0,
+                "mount": "/boot/efi",
+                "options": "rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=winnt,errors=remount-ro",
+                "size_available": 202121216,
+                "size_total": 209489920,
+                "uuid": "7B77-95E7"
+            }
+        ],
+
+
+In the following example, the ansible.builtin.dnf module installs the http
+package if there is a file system mounted on / with more than 300 MiB free. The
+ansible_facts['mounts'] fact is a list of dictionaries, each one representing facts about
+one mounted file system. The loop iterates over each dictionary in the list, and the conditional
+statement is not met unless a dictionary is found that represents a mounted file system where
+both conditions are true.
+
+[ansible@ansible playbook]$ cat playbook21.yml
+---
+- name: Demostrate the in keyword
+  hosts: web
+  gather_facts: yes
+  tasks:
+    - name: Install HTTPD using dnf where supported
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+      loop: "{{ ansible_facts['mounts'] }}"
+      when:
+        - item['mount'] == "/"
+        - item['size_available'] > 300000000
+[ansible@ansible playbook]$
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook21.yml
+
+PLAY [Demostrate the in keyword] **************************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Install HTTPD using dnf where supported] ************************************************************************************************
+ok: [node2] => (item={'mount': '/', 'device': '/dev/xvda4', 'fstype': 'xfs', 'options': 'rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota', 'size_total': 9384734720, 'size_available': 7732072448, 'block_size': 4096, 'block_total': 2291195, 'block_available': 1887713, 'block_used': 403482, 'inode_total': 4615104, 'inode_available': 4576263, 'inode_used': 38841, 'uuid': 'd0be04e8-fc37-4928-af70-fc3d6595ef71'})
+skipping: [node2] => (item={'mount': '/boot', 'device': '/dev/xvda3', 'fstype': 'xfs', 'options': 'rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota', 'size_total': 1006632960, 'size_available': 831057920, 'block_size': 4096, 'block_total': 245760, 'block_available': 202895, 'block_used': 42865, 'inode_total': 524288, 'inode_available': 523981, 'inode_used': 307, 'uuid': 'a2e9d044-9192-497f-a8c6-27aa7940de18'})
+skipping: [node2] => (item={'mount': '/boot/efi', 'device': '/dev/xvda2', 'fstype': 'vfat', 'options': 'rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=winnt,errors=remount-ro', 'size_total': 209489920, 'size_available': 202121216, 'block_size': 4096, 'block_total': 51145, 'block_available': 49346, 'block_used': 1799, 'inode_total': 0, 'inode_available': 0, 'inode_used': 0, 'uuid': '7B77-95E7'})
+ok: [node1] => (item={'mount': '/', 'device': '/dev/xvda4', 'fstype': 'xfs', 'options': 'rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota', 'size_total': 9384734720, 'size_available': 7735029760, 'block_size': 4096, 'block_total': 2291195, 'block_available': 1888435, 'block_used': 402760, 'inode_total': 4615104, 'inode_available': 4576259, 'inode_used': 38845, 'uuid': 'd0be04e8-fc37-4928-af70-fc3d6595ef71'})
+skipping: [node1] => (item={'mount': '/boot', 'device': '/dev/xvda3', 'fstype': 'xfs', 'options': 'rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota', 'size_total': 1006632960, 'size_available': 831057920, 'block_size': 4096, 'block_total': 245760, 'block_available': 202895, 'block_used': 42865, 'inode_total': 524288, 'inode_available': 523981, 'inode_used': 307, 'uuid': 'a2e9d044-9192-497f-a8c6-27aa7940de18'})
+skipping: [node1] => (item={'mount': '/boot/efi', 'device': '/dev/xvda2', 'fstype': 'vfat', 'options': 'rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=winnt,errors=remount-ro', 'size_total': 209489920, 'size_available': 202121216, 'block_size': 4096, 'block_total': 51145, 'block_available': 49346, 'block_used': 1799, 'inode_total': 0, 'inode_available': 0, 'inode_used': 0, 'uuid': '7B77-95E7'})
+
+PLAY RECAP ************************************************************************************************************************************
+node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+
+
+
