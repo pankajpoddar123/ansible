@@ -1,0 +1,75 @@
+[ansible@ansible playbook]$ cat playbook22.yml
+---
+- name: Restart httpd if firewalld is running
+  hosts: web
+  tasks:
+    - name: Check if firewalld service is running
+      shell: |
+        /usr/bin/systemctl is-active firewalld
+      register: status
+    - debug:
+        var: status
+    - name: Restart httpd
+      service:
+        name: httpd
+        state: restarted
+      when: status['rc'] == 0
+[ansible@ansible playbook]$ ansible-playbook playbook22.yml
+
+PLAY [Restart httpd if firewalld is running] **************************************************************************************************
+
+TASK [Gathering Facts] ************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Check if firewalld service is running] **************************************************************************************************
+changed: [node1]
+changed: [node2]
+
+TASK [debug] **********************************************************************************************************************************
+ok: [node1] => {
+    "status": {
+        "changed": true,
+        "cmd": "/usr/bin/systemctl is-active firewalld\n",
+        "delta": "0:00:00.011369",
+        "end": "2024-08-04 05:38:58.469535",
+        "failed": false,
+        "msg": "",
+        "rc": 0,
+        "start": "2024-08-04 05:38:58.458166",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "active",
+        "stdout_lines": [
+            "active"
+        ]
+    }
+}
+ok: [node2] => {
+    "status": {
+        "changed": true,
+        "cmd": "/usr/bin/systemctl is-active firewalld\n",
+        "delta": "0:00:00.011371",
+        "end": "2024-08-04 05:38:58.467369",
+        "failed": false,
+        "msg": "",
+        "rc": 0,
+        "start": "2024-08-04 05:38:58.455998",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "active",
+        "stdout_lines": [
+            "active"
+        ]
+    }
+}
+
+TASK [Restart httpd] **************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+PLAY RECAP ************************************************************************************************************************************
+node1                      : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
