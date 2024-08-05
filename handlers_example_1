@@ -1,0 +1,51 @@
+Handlers are tasks that respond to a notification triggered by other tasks. Tasks only notify their
+handlers when the task changes something on a managed host. Each handler is triggered by its
+name after the play’s block of tasks.
+
+If no task notifies the handler by name then the handler does not run. If one or more tasks notify
+the handler, the handler runs once after all other tasks in the play have completed. Because
+handlers are tasks, administrators can use the same modules in handlers that they would use for
+any other task.
+
+Normally, handlers are used to reboot hosts and restart services
+
+[ansible@ansible playbook]$ cat playbook24.yml
+---
+- name: Hanlders demo 1
+  hosts: web
+  tasks:
+    - name: Copy index.html
+      copy:
+        src: index.html
+        dest: /var/www/html/
+      notify:
+        - restart httpd
+
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
+[ansible@ansible playbook]$
+
+[ansible@ansible playbook]$ ansible-playbook playbook24.yml
+
+PLAY [Hanlders demo 1] **************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Copy index.html] **************************************************************************************************************************************
+changed: [node1]
+changed: [node2]
+
+RUNNING HANDLER [restart httpd] *****************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
