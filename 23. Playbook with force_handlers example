@@ -1,0 +1,106 @@
+Normally when a task fails and the play aborts on that host, any handlers that had been notified by
+earlier tasks in the play do not run. If you set the force_handlers: yes keyword on the play,
+then notified handlers are called even if the play aborted because a later task failed.
+
+If you have ignore_errors: yes set on a task or for the task’s play, if that task
+fails the failure is ignored. In that case, the play keeps running and handlers still run,
+even if you have force_handlers: no set, unless some other error causes the
+play to fail.
+
+This play without force_handlers
+
+[ansible@ansible playbook]$ cat playbook28.yml
+---
+- name: force_handlers and ignore_errors playbook
+  hosts: web
+  tasks:
+    - name: Restart firewalld
+      shell:
+        cmd: |
+          /usr/bin/systemctl is-active firewalld
+      notify:
+        - restart firewalld
+    - name: Error tasks
+      dnf:
+        name: nopackage
+        state: present
+  handlers:
+    - name: restart firewalld
+      service:
+        name: firewalld
+        state: restarted
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook28.yml
+
+PLAY [force_handlers and ignore_errors playbook] ************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node2]
+ok: [node1]
+
+TASK [Restart firewalld] ************************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Error tasks] ******************************************************************************************************************************************
+fatal: [node1]: FAILED! => {"changed": false, "failures": ["No package nopackage available."], "msg": "Failed to install some of the specified packages", "rc": 1, "results": []}
+fatal: [node2]: FAILED! => {"changed": false, "failures": ["No package nopackage available."], "msg": "Failed to install some of the specified packages", "rc": 1, "results": []}
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+
+
+Below example with force_handlers
+
+[ansible@ansible playbook]$ cat playbook29.yml
+---
+- name: force_handlers and ignore_errors playbook
+  hosts: web
+  force_handlers: true
+  tasks:
+    - name: Restart firewalld
+      shell:
+        cmd: |
+          /usr/bin/systemctl is-active firewalld
+      notify:
+        - restart firewalld
+    - name: Error tasks
+      dnf:
+        name: nopackage
+        state: present
+  handlers:
+    - name: restart firewalld
+      service:
+        name: firewalld
+        state: restarted
+
+
+[ansible@ansible playbook]$ ansible-playbook playbook29.yml
+
+PLAY [force_handlers and ignore_errors playbook] ************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Restart firewalld] ************************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Error tasks] ******************************************************************************************************************************************
+fatal: [node2]: FAILED! => {"changed": false, "failures": ["No package nopackage available."], "msg": "Failed to install some of the specified packages", "rc": 1, "results": []}
+fatal: [node1]: FAILED! => {"changed": false, "failures": ["No package nopackage available."], "msg": "Failed to install some of the specified packages", "rc": 1, "results": []}
+
+RUNNING HANDLER [restart firewalld] *************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=3    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
+
+
