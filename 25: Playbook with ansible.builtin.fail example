@@ -1,0 +1,37 @@
+[ansible@ansible playbook]$ cat playbook31.yml
+---
+- name: Failed when demo
+  hosts: web
+  tasks:
+    - name: Check the purpose for the automation account mentioned
+      shell:
+        cmd:
+          cat /etc/passwd | grep automation
+      register: status
+      ignore_errors: yes
+    - name: Report Failure
+      ansible.builtin.fail:
+        msg: "Purpose not mentioned for the automation account"
+      when: "'purpose' not in status.stdout"
+[ansible@ansible playbook]$
+
+[ansible@ansible playbook]$ ansible-playbook playbook31.yml
+
+PLAY [Failed when demo] *************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Check the purpose for the automation account mentioned] ***********************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Report Failure] ***************************************************************************************************************************************
+fatal: [node1]: FAILED! => {"changed": false, "msg": "Purpose not mentioned for the automation account"}
+fatal: [node2]: FAILED! => {"changed": false, "msg": "Purpose not mentioned for the automation account"}
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+node2                      : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+
