@@ -1,6 +1,6 @@
 [ansible@ansible playbook]$ cat playbook20.yml
 ---
-- name: Demostrate the in keyword
+- name: Demostrate and as well or example
   hosts: web
   gather_facts: yes
   tasks:
@@ -15,7 +15,7 @@
 
 [ansible@ansible playbook]$ ansible-playbook playbook20.yml
 
-PLAY [Demostrate the in keyword] **************************************************************************************************************
+PLAY [Demostrate and as well or example] **************************************************************************************************************
 
 TASK [Gathering Facts] ************************************************************************************************************************
 ok: [node2]
