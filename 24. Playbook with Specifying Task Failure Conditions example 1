@@ -1,0 +1,38 @@
+You can use the failed_when keyword on a task to specify which conditions indicate that the
+task has failed. This is often used with command modules that might successfully execute a
+command, but where the command’s output indicates a failure.
+
+[ansible@ansible playbook]$ cat playbook30.yml
+---
+- name: Failed when demo
+  hosts: web
+  tasks:
+    - name: Check the purpose for the automation account mentioned
+      shell:
+        cmd:
+          cat /etc/passwd | grep automation
+      register: status
+      failed_when: "'purpose' not in status.stdout"
+    - debug:
+        var: status
+[ansible@ansible playbook]$
+
+[ansible@ansible playbook]$ ansible-playbook playbook30.yml
+
+PLAY [Failed when demo] *************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Check the purpose for the automation account mentioned] ***********************************************************************************************
+fatal: [node1]: FAILED! => {"changed": true, "cmd": "cat /etc/passwd | grep automation", "delta": "0:00:00.006405", "end": "2024-08-13 07:25:25.669491", "failed_when_result": true, "msg": "", "rc": 0, "start": "2024-08-13 07:25:25.663086", "stderr": "", "stderr_lines": [], "stdout": "automation:x:1007:1007:automation account:/home/automation:/bin/bash", "stdout_lines": ["automation:x:1007:1007:automation account:/home/automation:/bin/bash"]}
+fatal: [node2]: FAILED! => {"changed": true, "cmd": "cat /etc/passwd | grep automation", "delta": "0:00:00.006123", "end": "2024-08-13 07:25:25.666306", "failed_when_result": true, "msg": "", "rc": 0, "start": "2024-08-13 07:25:25.660183", "stderr": "", "stderr_lines": [], "stdout": "automation:x:1005:1005:automation account:/home/automation:/bin/bash", "stdout_lines": ["automation:x:1005:1005:automation account:/home/automation:/bin/bash"]}
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+node2                      : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
+
+
