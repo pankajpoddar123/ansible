@@ -62,7 +62,7 @@ both conditions are true.
 
 [ansible@ansible playbook]$ cat playbook21.yml
 ---
-- name: Demostrate the in keyword
+- name: Demostrate playbook with loop and conditional expression 
   hosts: web
   gather_facts: yes
   tasks:
@@ -79,7 +79,7 @@ both conditions are true.
 
 [ansible@ansible playbook]$ ansible-playbook playbook21.yml
 
-PLAY [Demostrate the in keyword] **************************************************************************************************************
+PLAY [Demostrate playbook with loop and conditional expression ] **************************************************************************************************************
 
 TASK [Gathering Facts] ************************************************************************************************************************
 ok: [node2]
