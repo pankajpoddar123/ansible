@@ -1,0 +1,145 @@
+In playbooks, blocks are clauses that logically group tasks, and can be used to control how tasks
+are executed. For example, a task block can have a when keyword to apply a conditional to multiple
+tasks:
+
+Blocks also allow for error handling in combination with the rescue and always statements. If
+any task in a block fails, then rescue tasks are executed to recover.
+
+To summarize:
+• block: Defines the main tasks to run.
+• rescue: Defines the tasks to run if the tasks defined in the block clause fail.
+• always: Defines the tasks that always run independently of the success or failure of tasks
+defined in the block and rescue clauses
+
+[ansible@ansible playbook]$ cat playbook33.yml
+---
+- name: Block Example
+  hosts: web
+  tasks:
+    - name: Restarting httpd & Firewalld
+      block:
+      - name: Restarting httpd
+        systemd:
+          name: httpd
+          state: restarted
+      - name: Restarting Firewalld
+        systemd:
+          name: firewalld
+          state: restarted
+      when: ansible_distribution == "RedHat"
+
+[ansible@ansible playbook]$
+
+[ansible@ansible playbook]$ ansible-playbook playbook33.yml
+
+PLAY [Block Example] ****************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Restarting httpd] *************************************************************************************************************************************
+changed: [node1]
+changed: [node2]
+
+TASK [Restarting Firewalld] *********************************************************************************************************************************
+changed: [node1]
+changed: [node2]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+[ansible@ansible playbook]$ cat playbook34.yml
+---
+- name: Block Example
+  hosts: web
+  tasks:
+    - name: Restarting httpd & Firewalld
+      block:
+      - name: Restarting httpd
+        systemd:
+          name: httpd
+          state: restarted
+      rescue:
+      - name: Install httpd
+        dnf:
+          name: httpd
+          state: latest
+      always:
+      - name: Restarting Firewalld
+        systemd:
+          name: firewalld
+          state: restarted
+
+[ansible@ansible playbook]$ ansible-playbook playbook34.yml
+
+PLAY [Block Example] ****************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Restarting httpd] *************************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Restarting Firewalld] *********************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+[ansible@ansible playbook]$
+
+[ansible@ansible playbook]$ cat playbook35.yml
+---
+- name: Block Example
+  hosts: web
+  tasks:
+    - name: Restarting httpd & Firewalld
+      block:
+      - name: Restarting httpd
+        systemd:
+          name: httpds
+          state: restarted
+      rescue:
+      - name: Install httpd
+        dnf:
+          name: httpd
+          state: latest
+      always:
+      - name: Restarting Firewalld
+        systemd:
+          name: firewalld
+          state: restarted
+
+[ansible@ansible playbook]$ ansible-playbook playbook35.yml
+
+PLAY [Block Example] ****************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Restarting httpd] *************************************************************************************************************************************
+fatal: [node1]: FAILED! => {"changed": false, "msg": "Could not find the requested service httpds: host"}
+fatal: [node2]: FAILED! => {"changed": false, "msg": "Could not find the requested service httpds: host"}
+
+TASK [Install httpd] ****************************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+TASK [Restarting Firewalld] *********************************************************************************************************************************
+changed: [node2]
+changed: [node1]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=1    ignored=0
+node2                      : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=1    ignored=0
+
+[ansible@ansible playbook]$
+
