@@ -1,0 +1,55 @@
+[ansible@ansible playbook]$ cat os_info_to_csv.yml
+- name: Gather OS version and system type and save to CSV
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Ensure CSV file exists with headers
+      copy:
+        dest: /tmp/os_info.csv
+        content: "hostname,os_version,system_type\n"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Gather system information
+      set_fact:
+        os_info:
+          hostname: "{{ ansible_hostname }}"
+          os_version: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+          system_type: "{{ 'physical' if ansible_virtualization_type == 'physical' else ansible_virtualization_type }}"
+
+    - name: Append system info to CSV
+      lineinfile:
+        path: /tmp/os_info.csv
+        line: "{{ os_info.hostname }},{{ os_info.os_version }},{{ os_info.system_type }}"
+        insertafter: EOF
+      delegate_to: localhost
+
+[ansible@ansible playbook]$ ansible-playbook  os_info_to_csv.yml
+
+PLAY [Gather OS version and system type and save to CSV] ****************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Ensure CSV file exists with headers] ******************************************************************************************************************
+changed: [node1 -> localhost]
+
+TASK [Gather system information] ****************************************************************************************************************************
+ok: [node1]
+ok: [node2]
+
+TASK [Append system info to CSV] ****************************************************************************************************************************
+changed: [node2 -> localhost]
+changed: [node1 -> localhost]
+
+PLAY RECAP **************************************************************************************************************************************************
+node1                      : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+node2                      : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+[ansible@ansible playbook]$ cat /tmp/os_info.csv
+hostname,os_version,system_type
+node2,RedHat 9.4,xen
+node1,RedHat 9.4,xen
+[ansible@ansible playbook]$
