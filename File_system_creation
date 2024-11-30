@@ -63,3 +63,64 @@
         fstype: "{{ item.fstype }}"
         state: present
       loop: "{{ lv_names }}"
+
+[ansible@ansible playbook]$ ansible-playbook communitylvmodules.yml
+
+PLAY [Creating multiple File system] ************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [localhost]
+
+TASK [Creating VG] ******************************************************************************************************************************************
+ok: [localhost] => (item=['/dev/xvdb', '/dev/xvdc'])
+
+TASK [Creating LVS] *****************************************************************************************************************************************
+ok: [localhost] => (item={'name': 'mylv1', 'size': '2G', 'mount_point': '/ansible_1', 'fstype': 'xfs'})
+ok: [localhost] => (item={'name': 'mylv2', 'size': '3G', 'mount_point': '/ansible_2', 'fstype': 'xfs'})
+
+TASK [Create file systems] **********************************************************************************************************************************
+ok: [localhost] => (item={'name': 'mylv1', 'size': '2G', 'mount_point': '/ansible_1', 'fstype': 'xfs'})
+ok: [localhost] => (item={'name': 'mylv2', 'size': '3G', 'mount_point': '/ansible_2', 'fstype': 'xfs'})
+
+TASK [Creating mount point directory] ***********************************************************************************************************************
+changed: [localhost] => (item={'name': 'mylv1', 'size': '2G', 'mount_point': '/ansible_1', 'fstype': 'xfs'})
+changed: [localhost] => (item={'name': 'mylv2', 'size': '3G', 'mount_point': '/ansible_2', 'fstype': 'xfs'})
+
+TASK [Mount the logical volumes] ****************************************************************************************************************************
+changed: [localhost] => (item={'name': 'mylv1', 'size': '2G', 'mount_point': '/ansible_1', 'fstype': 'xfs'})
+changed: [localhost] => (item={'name': 'mylv2', 'size': '3G', 'mount_point': '/ansible_2', 'fstype': 'xfs'})
+
+TASK [Adding entry in fstab] ********************************************************************************************************************************
+ok: [localhost] => (item={'name': 'mylv1', 'size': '2G', 'mount_point': '/ansible_1', 'fstype': 'xfs'})
+ok: [localhost] => (item={'name': 'mylv2', 'size': '3G', 'mount_point': '/ansible_2', 'fstype': 'xfs'})
+
+PLAY RECAP **************************************************************************************************************************************************
+localhost                  : ok=7    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+[root@ansible ~]# pvs
+  PV         VG   Fmt  Attr PSize  PFree
+  /dev/xvdb  myvg lvm2 a--  <5.00g    0
+  /dev/xvdc  myvg lvm2 a--  <3.00g 2.99g
+[root@ansible ~]# vgs
+  VG   #PV #LV #SN Attr   VSize VFree
+  myvg   2   2   0 wz--n- 7.99g 2.99g
+[root@ansible ~]# lvs
+  LV    VG   Attr       LSize Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  mylv1 myvg -wi-ao---- 2.00g
+  mylv2 myvg -wi-ao---- 3.00g
+[root@ansible ~]# tail -2 /etc/fstab
+/dev/myvg/mylv1 /ansible_1 xfs defaults 0 0
+/dev/myvg/mylv2 /ansible_2 xfs defaults 0 0
+[root@ansible ~]# df -TPh
+Filesystem             Type      Size  Used Avail Use% Mounted on
+devtmpfs               devtmpfs  4.0M     0  4.0M   0% /dev
+tmpfs                  tmpfs     383M     0  383M   0% /dev/shm
+tmpfs                  tmpfs     154M   13M  141M   9% /run
+/dev/xvda4             xfs       8.8G  4.4G  4.4G  50% /
+/dev/xvda3             xfs       960M  268M  693M  28% /boot
+/dev/xvda2             vfat      200M  7.1M  193M   4% /boot/efi
+tmpfs                  tmpfs      77M     0   77M   0% /run/user/1000
+/dev/mapper/myvg-mylv1 xfs       2.0G   47M  1.9G   3% /ansible_1
+/dev/mapper/myvg-mylv2 xfs       3.0G   54M  2.9G   2% /ansible_2
+[root@ansible ~]#
