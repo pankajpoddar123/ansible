@@ -1,0 +1,65 @@
+[ansible@ansible playbook]$ cat communitylvmodules.yml
+---
+- name: Creating multiple File system
+  hosts: localhost
+  vars:
+    vg_name: myvg
+    pv_names:
+      - /dev/xvdb
+      - /dev/xvdc
+    lv_names:
+      - name: mylv1
+        size: 2G
+        mount_point: /ansible_1
+        fstype: xfs
+      - name: mylv2
+        size: 3G
+        mount_point: /ansible_2
+        fstype: xfs
+
+
+  tasks:
+    - name: Creating VG
+      ansible.builtin.lvg:
+        vg: "{{ vg_name }}"
+        pvs: "{{ item }}"
+      loop:
+        - "{{ pv_names }}"
+
+    - name: Creating LVS
+      ansible.builtin.lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ item.name }}"
+        size: "{{ item.size }}"
+      loop: "{{ lv_names }}"
+
+    - name: Create file systems
+      ansible.builtin.filesystem:
+        dev: "/dev/{{ vg_name }}/{{ item.name }}"
+        fstype: "{{ item.fstype }}"
+      loop: "{{ lv_names }}"
+
+    - name: Creating mount point directory
+      ansible.builtin.file:
+        path: "{{ item.mount_point }}"
+        mode: 0755
+        owner: ansible
+        group: ansible
+        state: directory
+      loop: "{{ lv_names }}"
+
+    - name: Mount the logical volumes
+      ansible.builtin.mount:
+        path: "{{ item.mount_point }}"
+        src: "/dev/{{ vg_name }}/{{ item.name }}"
+        fstype: "{{ item.fstype }}"
+        state: mounted
+      loop: "{{ lv_names }}"
+
+    - name: Adding entry in fstab
+      ansible.builtin.mount:
+        path: "{{ item.mount_point }}"
+        src: "/dev/{{ vg_name }}/{{ item.name }}"
+        fstype: "{{ item.fstype }}"
+        state: present
+      loop: "{{ lv_names }}"
