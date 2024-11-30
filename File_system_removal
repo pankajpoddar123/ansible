@@ -1,0 +1,64 @@
+[ansible@ansible playbook]$ cat filesstemremoval.yml
+---
+- name: Creating multiple File system
+  hosts: localhost
+  vars:
+    vg_name: myvg
+    pv_names:
+      - /dev/xvdb
+      - /dev/xvdc
+    lv_names:
+      - name: mylv1
+        size: 2G
+        mount_point: /ansible_1
+        fstype: xfs
+      - name: mylv2
+        size: 3G
+        mount_point: /ansible_2
+        fstype: xfs
+
+
+  tasks:
+    - name: Removing entry in fstab and unmounting the file system
+      ansible.builtin.mount:
+        path: "{{ item.mount_point }}"
+        src: "/dev/{{ vg_name }}/{{ item.name }}"
+        fstype: "{{ item.fstype }}"
+        state: absent
+      loop: "{{ lv_names }}"
+
+    - name: Deleting the directory
+      ansible.builtin.file:
+        path: "{{ item.mount_point }}"
+        state: absent
+      loop: "{{ lv_names }}"
+
+    - name: Delete file systems
+      ansible.builtin.filesystem:
+        dev: "/dev/{{ vg_name }}/{{ item.name }}"
+        state: absent
+      loop: "{{ lv_names }}"
+
+    - name: Deleting LVS
+      ansible.builtin.lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ item.name }}"
+        state: absent
+        force: true
+      loop: "{{ lv_names }}"
+
+    - name: Deleting the VG
+      ansible.builtin.lvg:
+        vg: "{{ vg_name }}"
+        state: absent
+
+    - name: Remove the physical volume
+      ansible.builtin.shell:
+        cmd: pvremove {{ item }}
+      loop: "{{ pv_names }}"
+      ignore_errors: true
+
+
+
+
+[ansible@ansible playbook]$
